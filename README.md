@@ -12,7 +12,7 @@ IT Teams struggle with missed updates, too many alerts, and failed backups - cau
 The **Smart IT Ops Dashboard** is a lightweight, all-in-one platform that solves these three problems. It provides a "single-pane-of-glass" for IT admins to manage patches, filter critical alerts, and automate backups.
 
 ## 3. Demo & Links
-* **Live Prototype:** []
+* **Live Prototype:** [https://mahammadaslam.github.io/Super-hack-IT-Dashboard/]
 * **Demo Video:** [https://drive.google.com/file/d/1bXsjOgLkGRNR_MGN-Wcm3lrJPZQ5fMkL/view?usp=drivesdk]
 
 ## 4. Key Features
