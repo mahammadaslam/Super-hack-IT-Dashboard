@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart IT Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+<style>
+    :root {
+        --primary-color: #4f46e5;
+        --text-dark: #1f2937;
+        --text-muted: #6b7280;
+        --background-light: #f3f4f6;
+        --border-color: #d1d5db;
+        --error-color: #ef4444;
+        --success-color: #22c55e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        background: linear-gradient(to top right, #fbcfe8, #bfdbfe);
+        transition: background 0.5s, color 0.5s;
+        min-height: 100vh;
+    }
+    body.dark { background: #121212; color: #fff; }
+    
+    /* Login Styles */
+    .auth-container-wrapper { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 1rem; }
+    .auth-container {
+        width: 100%; max-width: 380px; /* ADJUSTED SIZE FOR MOBILE */
+        background: #ffffff; /* REVERTED TO SOLID WHITE BACKGROUND */
+        border: 1px solid var(--border-color);
+        color: var(--text-dark);
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        text-align: center; position: relative; overflow: hidden;
+    }
+    .auth-screens-wrapper { display: flex; width: 200%; transition: transform 0.4s ease-in-out; }
+    .auth-screen { flex-shrink: 0; width: 50%; padding: 2.5rem 2rem; box-sizing: border-box; }
+    .logo {
+        width: 50px; height: 50px; margin: 0 auto 1rem;
+        background: var(--primary-color); border-radius: 0.75rem;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .logo i { font-size: 1.75rem; color: #fff; }
+    .auth-screen h1 { font-size: 1.75rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark); }
+    .auth-screen p.subtitle { font-size: 1rem; color: var(--text-muted); margin-bottom: 2rem; }
+    .form-group { position: relative; margin-bottom: 1.5rem; }
+    .form-control {
+        width: 100%; padding: 1rem; 
+        background: var(--background-light);
+        border: 1px solid var(--border-color); 
+        border-radius: 0.5rem;
+        font-family: 'Poppins', sans-serif; font-size: 1rem; 
+        color: var(--text-dark);
+    }
+    .form-control::placeholder { color: var(--text-muted); opacity: 1; }
+    .form-control:focus { 
+        outline: none; 
+        border-color: var(--primary-color); 
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); 
+    }
+    .btn.btn-auth {
+        display: flex; align-items: center; justify-content: center;
+        width: 100%; padding: 1rem; border-radius: 0.5rem;
+        font-weight: 500; margin-top: 1.5rem;
+        background-color: var(--primary-color); color: #fff;
+        border: none;
+    }
+    .auth-switch { margin-top: 2rem; font-size: 0.9rem; color: var(--text-muted); }
+    .auth-switch a { color: var(--primary-color); text-decoration: none; font-weight: 500; }
+    .feedback-message {
+        padding: 0.75rem; margin-bottom: 1rem; border-radius: 0.5rem;
+        font-size: 0.9rem; text-align: left;
+        opacity: 0; height: 0; overflow: hidden;
+        transition: opacity 0.3s, height 0.3s;
+    }
+    .feedback-message.show { opacity: 1; height: auto; }
+    .feedback-message.error { background-color: #fee2e2; color: var(--error-color); }
+    .feedback-message.success { background-color: #dcfce7; color: var(--success-color); }
+
+    /* Dashboard Styles */
+    .navbar-custom { display:flex; justify-content:space-around; margin-bottom:20px; border-radius:10px; padding:10px; background: var(--primary-color); }
+    .navbar-custom a { cursor:pointer; font-weight:bold; color:white; text-decoration:none; padding: 5px 15px; border-radius: 8px; transition: background-color 0.2s;}
+    .navbar-custom a:hover, .navbar-custom a.active { background-color: rgba(255,255,255,0.2); }
+    .ticker { background:rgba(255,255,255,0.7); color: var(--text-dark); padding:10px; overflow:hidden; white-space:nowrap; border-radius:10px; margin-bottom:20px; }
+    body.dark .ticker { background:#333; color:white;}
+    .ticker span { 
+        display:inline-block; 
+        padding-left:100%; 
+        animation:ticker 60s linear infinite;
+    }
+    @keyframes ticker {0%{transform:translateX(0%);}100%{transform:translateX(-100%);}}
+    .section { display:none; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .card { border-radius:15px; box-shadow:0 8px 20px rgba(0,0,0,0.05); padding:20px; margin-bottom:20px; transition:0.3s; border: none;}
+    body.dark .card { background: #2a2a2a; }
+    .card:hover{transform:translateY(-5px); box-shadow:0 12px 25px rgba(0,0,0,0.1);}
+    #greeting { 
+        text-align:center; 
+        font-size:2.2rem; 
+        font-weight:bold; 
+        margin-bottom:20px; 
+        color: var(--primary-color);
+        background: linear-gradient(90deg,#ff416c,#ff4b2b,#4f46e5,#3b82f6); 
+        -webkit-background-clip:text; 
+        background-clip: text;
+        -webkit-text-fill-color:transparent; 
+        background-size: 200% auto; 
+        animation: gradientAnim 5s ease infinite;
+    }
+    @keyframes gradientAnim {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    #themeToggle { position:absolute; top:20px; right:20px; padding:10px; border:none; border-radius:10px; cursor:pointer; background:var(--primary-color); color:white; font-weight: bold;}
+    .kpi-card { background: #fff; padding: 1.5rem; border-radius: 15px; text-align: center; box-shadow:0 8px 20px rgba(0,0,0,0.05);}
+    body.dark .kpi-card { background: #2a2a2a; }
+    .kpi-card h5 { margin-bottom: 0.5rem; color: var(--text-muted); font-size: 1rem;}
+    .kpi-card .kpi-value { font-size: 2rem; font-weight: bold; }
+    .ai-output { background-color: var(--background-light); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-top: 1rem; white-space: pre-wrap; font-family: monospace; position: relative; }
+    body.dark .ai-output { background-color: #333; border-color: #555; }
+    .copy-btn { position: absolute; top: 10px; right: 10px; background-color: #6c757d; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    .btn-outline-secondary.active { background-color: var(--primary-color); color: white; }
+</style>
+</head>
+<body>
+
+<div class="auth-container-wrapper" id="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-screens-wrapper" id="auth-screens-wrapper">
+            <div id="login-screen" class="auth-screen">
+                <div class="logo"><i class="fa-solid fa-shield-halved"></i></div>
+                <h1>Login</h1><p class="subtitle">Sign in to your IT dashboard.</p>
+                <form id="login-form">
+                    <div class="feedback-message" id="login-feedback"></div>
+                    <div class="form-group">
+                        <select class="form-control" name="role" required>
+                            <option value="" disabled selected>Select Your Role</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Employee">Employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><input type="email" class="form-control" name="email" placeholder="Work Email Address" required></div>
+                    <div class="form-group"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
+                    <button type="submit" class="btn btn-auth"><span class="btn-text">Login</span><span class="spinner-border spinner-border-sm" style="display: none;"></span></button>
+                </form>
+                <div class="auth-switch"><span>Don't have an account? <a href="#" onclick="showSignup()">Create one</a></span></div>
+            </div>
+            <div id="signup-screen" class="auth-screen">
+                 <div class="logo"><i class="fa-solid fa-user-plus"></i></div>
+                <h1>Create Account</h1><p class="subtitle">Get started with a new account.</p>
+                <form id="signup-form">
+                    <div class="feedback-message" id="signup-feedback"></div>
+                    <div class="form-group"><input type="text" class="form-control" name="name" placeholder="Full Name" required></div>
+                    <div class="form-group">
+                        <select class="form-control" name="role" required>
+                            <option value="" disabled selected>Select Your Role</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Employee">Employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><input type="email" class="form-control" name="email" placeholder="Work Email Address" required></div>
+                    <div class="form-group"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
+                    <button type="submit" class="btn btn-auth"><span class="btn-text">Create Account</span><span class="spinner-border spinner-border-sm" style="display: none;"></span></button>
+                </form>
+                <div class="auth-switch"><span>Already have an account? <a href="#" onclick="showLogin()">Login</a></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+<div id="dashboard" style="display:none; padding:20px;">
+    <button id="themeToggle">Dark Mode</button>
+    <div id="greeting"></div>
+    <div class="navbar-custom" id="navbar">
+        <a data-section="home">Home</a>
+        <a data-section="updates">Updates</a>
+        <a data-section="alerts">Alerts</a>
+        <a data-section="backups">Backups</a>
+        <a data-section="reports">Reports</a>
+        <a data-section="ai-copilot">✨ AI Co-Pilot</a>
+        <a id="logout-btn">Logout</a>
+    </div>
+    <div class="ticker"><span></span></div>
+    
+    <div id="home" class="section">
+        <div class="row mb-4">
+            <div class="col-md-3"><div class="kpi-card"><h5>System Uptime</h5><div class="kpi-value text-success">99.98%</div></div></div>
+            <div class="col-md-3"><div class="kpi-card"><h5>Services Healthy</h5><div class="kpi-value text-success">15 / 15</div></div></div>
+            <div class="col-md-3"><div class="kpi-card"><h5>Active Incidents</h5><div id="kpi-incidents" class="kpi-value text-danger">0</div></div></div>
+            <div class="col-md-3"><div class="kpi-card"><h5>Latency</h5><div class="kpi-value text-primary">24ms</div></div></div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3"><div class="card text-center"><h5>CPU Usage</h5><canvas id="cpuChart" height="120"></canvas></div></div>
+            <div class="col-md-3"><div class="card text-center"><h5>Memory Usage</h5><canvas id="memoryChart" height="120"></canvas></div></div>
+            <div class="col-md-3"><div class="card"><h5 class="text-center">Alerts Summary</h5><ul class="list-group list-group-flush"><li class="list-group-item d-flex justify-content-between align-items-center">Critical <span id="critical-alerts-summary" class="badge bg-danger rounded-pill">0</span></li><li class="list-group-item d-flex justify-content-between align-items-center">Warning <span id="warning-alerts-summary" class="badge bg-warning rounded-pill">0</span></li></ul><button class="btn btn-sm btn-outline-primary mt-2" id="home-view-alerts-btn">View All Alerts</button></div></div>
+            <div class="col-md-3"><div class="card"><h5 class="text-center">Recent Activity</h5><ul id="activity-feed" class="list-group list-group-flush small"></ul></div></div>
+        </div>
+    </div>
+    <div id="updates" class="section"><div class="card"><h3>Patch Management</h3><table class="table table-hover align-middle"><thead class="table-light"><tr><th>System</th><th>Update</th><th>Severity</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody id="updates-table"></tbody></table></div></div>
+    <div id="alerts" class="section"><div class="card"><h3>Incident Management</h3>
+        <div class="mb-3" id="alert-filters">
+            <button class="btn btn-sm btn-outline-secondary active" onclick="filterAlerts('All', this)">All</button> 
+            <button class="btn btn-sm btn-outline-danger" onclick="filterAlerts('Critical', this)">Critical</button> 
+            <button class="btn btn-sm btn-outline-warning" onclick="filterAlerts('Warning', this)">Warning</button>
+        </div>
+        <table class="table table-hover align-middle"><thead class="table-light"><tr><th>Severity</th><th>Message</th><th>Source</th><th>Timestamp</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody id="alerts-table"></tbody></table></div></div>
+    <div id="backups" class="section"><div class="card"><h3>Backup & Recovery</h3><p>Next automatic backup: <strong>16 Oct 2025, 2:00 AM</strong></p><button class="btn btn-primary mb-3" onclick="simulateBackup(this)">Run Full Backup Now</button><h5>Backup History</h5><ul id="backupHistory" class="list-group"></ul></div></div>
+    <div id="reports" class="section"><div class="card"><h3>Performance Reports</h3><div class="mb-3"><select class="form-select w-auto d-inline-block"><option>Last 24 Hours</option><option>Last 7 Days</option></select> <button class="btn btn-primary" onclick="exportReportToPDF(this)">Export as PDF</button></div><div class="row"><div class="col-md-6"><div class="card"><h5 class="text-center">CPU Usage Over Time</h5><canvas id="cpuReportChart"></canvas></div></div><div class="col-md-6"><div class="card"><h5 class="text-center">Memory Usage Over Time</h5><canvas id="memReportChart"></canvas></div></div></div></div></div>
+    <div id="ai-copilot" class="section"><div class="row"><div class="col-md-6"><div class="card h-100"><h4>✨ AI Log Analyzer</h4><p class="text-muted small">Paste logs to get a summary and identify errors.</p><textarea id="log-input" class="form-control" rows="8" placeholder="[2025-10-15 21:30:15] ERROR: Connection refused for user 'root' from 192.168.1.100 to DB-MAIN..."></textarea><button class="btn btn-primary mt-2" onclick="analyzeLogs(this)">Analyze Logs</button><div id="log-analysis-output" class="ai-output" style="display: none;"></div></div></div><div class="col-md-6"><div class="card h-100"><h4>✨ AI Script Generator</h4><p class="text-muted small">Describe a task to generate a script.</p><textarea id="script-prompt" class="form-control" rows="5" placeholder="e.g., Check disk space on all Linux servers and alert if usage > 90%"></textarea><select id="script-lang" class="form-select mt-2"><option>Bash</option><option>PowerShell</option></select><button class="btn btn-primary mt-2" onclick="generateScript(this)">Generate Script</button><div id="script-output" class="ai-output" style="display: none;"></div></div></div></div></div>
+</div>
+
+<div class="modal fade" id="aiReportModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">AI Incident Report</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="ai-report-content"></div></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// --- ELEMENTS & "DATABASE" ---
+const authWrapper = document.getElementById('auth-wrapper'), authScreensWrapper = document.getElementById('auth-screens-wrapper'), dashboard = document.getElementById('dashboard');
+let users = JSON.parse(localStorage.getItem('users')) || [
+    {name: 'Admin User', email: 'admin@corp.com', password: 'password123', role: 'Admin'},
+    {name: 'Manager User', email: 'manager@corp.com', password: 'password123', role: 'Manager'},
+    {name: 'Employee User', email: 'employee@corp.com', password: 'password123', role: 'Employee'}
+];
+let aiReportModal, alertIdCounter = 0, alertSimulatorInterval;
+
+// --- AUTH & PAGE SWITCHING ---
+function showLogin() { authScreensWrapper.style.transform = 'translateX(0%)'; }
+function showSignup() { authScreensWrapper.style.transform = 'translateX(-50%)'; }
+function showDashboard() {
+    authWrapper.style.display = 'none';
+    dashboard.style.display = 'block';
+    document.body.style.background = document.body.classList.contains('dark') ? '#121212' : 'var(--background-light)';
+    initializeDashboard();
+}
+
+// --- FORM SUBMISSION LOGIC ---
+document.getElementById('signup-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.target, name = form.name.value.trim(), email = form.email.value.trim(), password = form.password.value.trim(), role = form.role.value;
+    setButtonLoading(form, true);
+    setTimeout(() => {
+        if (users.find(user => user.email === email)) {
+            displayFeedback('An account with this email already exists.', 'error', 'signup');
+        } else if (!role) {
+            displayFeedback('Please select a role.', 'error', 'signup');
+        } else {
+            users.push({ name, email, password, role });
+            localStorage.setItem('users', JSON.stringify(users));
+            displayFeedback(`Account created as a ${role}! Please log in.`, 'success', 'signup');
+            setTimeout(showLogin, 1500);
+        }
+        setButtonLoading(form, false);
+    }, 1000);
+});
+
+document.getElementById('login-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.target, email = form.email.value.trim(), password = form.password.value.trim(), role = form.role.value;
+    setButtonLoading(form, true);
+    setTimeout(() => {
+        const userByEmail = users.find(u => u.email === email);
+        
+        if (!role) {
+             displayFeedback('Please select a role.', 'error', 'login');
+        } else if (!userByEmail) {
+            displayFeedback('No account found with this email.', 'error', 'login');
+        } else if (userByEmail.password !== password) {
+            displayFeedback('Incorrect password. Please try again.', 'error', 'login');
+        } else if (userByEmail.role !== role) {
+            displayFeedback(`Credentials correct, but an incorrect role was selected. Your role is '${userByEmail.role}'.`, 'error', 'login');
+        } else {
+            localStorage.setItem('loggedInUser', JSON.stringify(userByEmail));
+            showDashboard();
+        }
+        setButtonLoading(form, false);
+    }, 1000);
+});
+
+// --- UI HELPERS ---
+function displayFeedback(message, type, formId) {
+    const el = document.getElementById(`${formId}-feedback`);
+    el.textContent = message; el.className = `feedback-message ${type} show`;
+    setTimeout(() => el.classList.remove('show'), 5000);
+}
+function setButtonLoading(form, isLoading) {
+    const btn = form.querySelector('button[type="submit"]'), text = btn.querySelector('.btn-text'), spin = btn.querySelector('.spinner-border');
+    btn.disabled = isLoading; 
+    text.style.display = isLoading ? 'none' : 'inline-block'; 
+    spin.style.display = isLoading ? 'inline-block' : 'none';
+}
+
+// --- DASHBOARD INITIALIZATION ---
+function initializeDashboard() {
+    aiReportModal = new bootstrap.Modal(document.getElementById('aiReportModal'));
+    setupEventListeners();
+    showSection('home');
+    updateGreeting();
+    renderInitialData();
+    addActivity("User logged in successfully.");
+    addTickerMessage('Welcome to Smart IT Dashboard. All systems are currently nominal.');
+    if (!alertSimulatorInterval) {
+       startAlertSimulation();
+    }
+}
+function renderInitialData() {
+    updatesData = [...initialUpdates];
+    alertsData = [];
+    renderUpdatesTable();
+    renderAlertsTable(alertsData);
+    renderBackupHistory();
+}
+// --- Centralized Event Listeners for Dashboard ---
+function setupEventListeners() {
+    document.querySelectorAll('#navbar a[data-section]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection(link.dataset.section);
+        });
+    });
+    document.getElementById('logout-btn').addEventListener('click', logoutUser);
+    document.getElementById('home-view-alerts-btn').addEventListener('click', () => showSection('alerts'));
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+}
+
+// --- REAL-TIME ALERT SIMULATION ---
+const alertPool = [
+    { severity: 'Critical', msg: 'High transaction failure rate on Payment-API (98% errors)', src: 'API-GW-01' },
+    { severity: 'Critical', msg: 'Unauthorized root access detected on Server-WEB-03', src: 'Auth-FW' },
+    { severity: 'Warning', msg: 'Redis cache memory usage at 92%', src: 'Cache-Cluster-01' },
+    { severity: 'Warning', msg: "SSL Certificate for 'billing.smartops.com' expires in 14 days", src: 'Cert-Manager' }
+];
+let alertsData = [];
+function startAlertSimulation() {
+    alertSimulatorInterval = setInterval(() => {
+        if(document.getElementById('dashboard').style.display !== 'block') return;
+        const newAlert = { ...alertPool[Math.floor(Math.random() * alertPool.length)] };
+        newAlert.id = ++alertIdCounter;
+        newAlert.status = 'New';
+        newAlert.timestamp = new Date();
+        alertsData.unshift(newAlert);
+        renderAlertsTable(alertsData);
+        showNewAlertToast(newAlert);
+        addActivity(`New ${newAlert.severity} alert: ${newAlert.msg}`);
+    }, Math.random() * 10000 + 10000);
+}
+function showNewAlertToast(alert) {
+    const toastContainer = document.querySelector('.toast-container');
+    const toastHTML = `<div class="toast" role="alert"><div class="toast-header bg-${alert.severity === 'Critical' ? 'danger' : 'warning'} text-white"><strong class="me-auto"><i class="fas fa-exclamation-triangle me-2"></i>New ${alert.severity} Alert</strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div><div class="toast-body">${alert.msg}</div></div>`;
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    const newToast = new bootstrap.Toast(toastContainer.lastElementChild, { delay: 10000 });
+    newToast.show();
+}
+
+// --- INTERACTIVE TABLES ---
+const initialUpdates = [ {id: 1, system: 'Server-01', name: 'Kernel Update v5.4', severity: 'Critical', status: 'Pending'}, {id: 2, system: 'Database-Main', name: 'Security Patch Q4', severity: 'High', status: 'Pending'} ];
+let updatesData = [];
+function renderUpdatesTable() {
+    const table = document.getElementById('updates-table');
+    const severityMap = {'Critical': 'danger', 'High': 'warning', 'Medium': 'info'};
+    table.innerHTML = updatesData.map(u => `<tr id="update-${u.id}"><td>${u.system}</td><td>${u.name}</td><td><span class="badge bg-${severityMap[u.severity]}">${u.severity}</span></td><td class="update-status">${u.status}</td><td class="text-end"><button class="btn btn-sm btn-primary" onclick="applyUpdate(${u.id}, this)">Apply</button></td></tr>`).join('') || `<tr><td colspan="5" class="text-center text-muted">No pending updates.</td></tr>`;
+}
+function applyUpdate(id, btn) {
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    document.querySelector(`#update-${id} .update-status`).innerHTML = '<span class="text-primary">Applying...</span>';
+    setTimeout(() => {
+        updatesData = updatesData.filter(u => u.id !== id);
+        addActivity(`Patch applied for update #${id}.`);
+        renderUpdatesTable();
+    }, 2000);
+}
+function renderAlertsTable(dataToRender) {
+    const table = document.getElementById('alerts-table');
+    const severityMap = {'Critical': 'danger', 'Warning': 'warning'};
+    table.innerHTML = dataToRender.map(a => {
+        const statusClass = a.status === 'New' ? 'secondary' : (a.status === 'Acknowledged' ? 'info' : 'success');
+        const escapedMsg = a.msg.replace(/'/g, "\\'");
+        let actions = a.status === 'New' ? `<button class="btn btn-sm btn-primary" onclick="acknowledgeAlert(${a.id})">Acknowledge</button>` :
+                                  a.status === 'Acknowledged' ? `<button class="btn btn-sm btn-success" onclick="resolveAlert(${a.id})">Resolve</button>` :
+                                  `<button class="btn btn-sm btn-info" onclick="generateIncidentReport('${escapedMsg}', '${a.src}')">✨ AI Report</button>`;
+        return `<tr id="alert-${a.id}"><td><span class="badge bg-${severityMap[a.severity]}">${a.severity}</span></td><td>${a.msg}</td><td>${a.src}</td><td>${timeAgo(a.timestamp)}</td><td><span class="badge bg-${statusClass}">${a.status}</span></td><td class="text-end" id="alert-actions-${a.id}">${actions}</td></tr>`;
+    }).join('') || `<tr><td colspan="6" class="text-center text-muted">No active alerts.</td></tr>`;
+    updateAlertSummaries();
+}
+
+function filterAlerts(severity, clickedButton) {
+    document.querySelectorAll('#alert-filters button').forEach(btn => btn.classList.remove('active'));
+    clickedButton.classList.add('active');
+
+    if (severity === 'All') {
+        renderAlertsTable(alertsData);
+    } else {
+        const filteredData = alertsData.filter(a => a.severity === severity);
+        renderAlertsTable(filteredData);
+    }
+}
+
+function acknowledgeAlert(id) { const alert = alertsData.find(a => a.id === id); if(alert) { alert.status = 'Acknowledged'; addActivity(`Alert #${id} acknowledged.`); renderAlertsTable(alertsData); } }
+function resolveAlert(id) { const alert = alertsData.find(a => a.id === id); if(alert) { alert.status = 'Resolved'; addActivity(`Alert #${id} resolved.`); renderAlertsTable(alertsData); } }
+function updateAlertSummaries() {
+    document.getElementById('critical-alerts-summary').textContent = alertsData.filter(a => a.severity === 'Critical' && a.status !== 'Resolved').length;
+    document.getElementById('warning-alerts-summary').textContent = alertsData.filter(a => a.severity === 'Warning' && a.status !== 'Resolved').length;
+    document.getElementById('kpi-incidents').textContent = alertsData.filter(a => a.status !== 'Resolved').length;
+}
+function renderBackupHistory() { document.getElementById('backupHistory').innerHTML = `<li class="list-group-item d-flex justify-content-between"><div><strong>15 Oct 2025</strong> - Success <small>(1.2 GB)</small></div><button class="btn btn-sm btn-success" onclick="confirmRestore()">Restore</button></li>`; }
+function confirmRestore() { if(confirm("Are you sure you want to restore?")) { alert("Restore process initiated."); } }
+function simulateBackup(btn) {
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Backing up...';
+    setTimeout(() => {
+        const history = document.getElementById('backupHistory');
+        const newEntry = document.createElement('li');
+        newEntry.className = 'list-group-item d-flex justify-content-between align-items-center';
+        newEntry.innerHTML = `<div><strong>${new Date().toLocaleString()}</strong> - Success<br><small>Duration: 16m 04s | Size: 1.3 GB</small></div><button class="btn btn-sm btn-success" onclick="confirmRestore()">Restore</button>`;
+        history.prepend(newEntry);
+        addActivity('Manual backup succeeded.');
+        btn.disabled = false; btn.textContent = 'Run Full Backup Now';
+    }, 3000);
+}
+// --- ACTIVITY & TICKER ---
+function addActivity(msg) {
+    const feed = document.getElementById('activity-feed');
+    const entry = document.createElement('li'); entry.className = 'list-group-item'; entry.textContent = msg;
+    feed.prepend(entry);
+    if(feed.children.length > 4) feed.lastChild.remove();
+    addTickerMessage(msg);
+}
+function addTickerMessage(msg){ document.querySelector('.ticker span').textContent=msg+' | '+document.querySelector('.ticker span').textContent; }
+
+// --- AI CO-PILOT FUNCTIONS ---
+function analyzeLogs(btn) {
+    const output = document.getElementById('log-analysis-output');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyzing...';
+    output.style.display = 'block'; output.innerHTML = 'Thinking...';
+    setTimeout(() => {
+        output.innerHTML = `<strong>Log Analysis Summary:</strong><br> - 1 Critical Error: Unauthorized root access detected.<br><strong>Suggested Action:</strong><br> 1. Immediately isolate the affected server (Server-WEB-03) from the network.<br> 2. Force-expire credentials for all users on the server.<br> 3. Begin forensic analysis of system logs to determine the scope of the breach.`;
+        btn.disabled = false; btn.innerHTML = 'Analyze Logs';
+    }, 2000);
+}
+function generateScript(btn) {
+    const lang = document.getElementById('script-lang').value;
+    const prompt = document.getElementById('script-prompt').value.toLowerCase();
+    const output = document.getElementById('script-output');
+    
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+    output.style.display = 'block'; output.innerHTML = 'Thinking...';
+
+    setTimeout(() => {
+        let mockScript = '';
+        if (prompt.includes('disk space')) {
+            mockScript = lang === 'Bash' 
+                ? `df -h | awk '$5 > 90 {print}'` 
+                : `Get-WmiObject Win32_LogicalDisk | Where-Object { $_.Size -gt 0 } | Select-Object DeviceID, @{Name="FreeSpace (GB)"; Expression={"{0:N2}" -f ($_.FreeSpace / 1GB)}}, @{Name="Size (GB)"; Expression={"{0:N2}" -f ($_.Size / 1GB)}}, @{Name="PercentFree"; Expression={"{0:P2}" -f ($_.FreeSpace / $_.Size)}} | Where-Object { $_.PercentFree -lt 0.1 }`;
+        } else if (prompt.includes('large files')) {
+             mockScript = lang === 'Bash' 
+                ? `find / -type f -size +1G -exec ls -lh {} \\; | awk '{ print $9 ": " $5 }'`
+                : `Get-ChildItem C:\\ -Recurse -ErrorAction SilentlyContinue | Where-Object { !$_.PSIsContainer -and $_.Length -gt 1GB } | Sort-Object Length -Descending | Select-Object FullName, @{Name="SizeInGB"; Expression={($_.Length / 1GB).ToString("F2")}}`;
+        } else if (prompt.includes('active ports')) {
+             mockScript = lang === 'Bash' 
+                ? `netstat -tuln | grep LISTEN`
+                : `Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, State, OwningProcess | Format-Table -AutoSize`;
+        } else {
+            mockScript = lang === 'Bash' 
+                ? `echo "Sorry, I don't have a script for that yet. Here is a generic one to list files."\nls -la`
+                : `Write-Host "Sorry, I don't have a script for that yet. Here is a generic one to list files."\nGet-ChildItem`;
+        }
+        
+        output.innerHTML = `<button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code>${mockScript}</code></pre>`;
+        btn.disabled = false; btn.innerHTML = 'Generate Script';
+    }, 2000);
+}
+function generateIncidentReport(msg, src) {
+    const content = document.getElementById('ai-report-content');
+    content.innerHTML = '<div class="text-center"><div class="spinner-border"></div><p>Generating Report...</p></div>';
+    aiReportModal.show();
+    setTimeout(() => {
+        content.innerHTML = '';
+        const h4 = document.createElement('h4');
+        h4.textContent = 'Root Cause Analysis (RCA)';
+        const incidentStrong = document.createElement('strong');
+        incidentStrong.textContent = 'Incident: ';
+        const sourceStrong = document.createElement('strong');
+        sourceStrong.textContent = 'Source: ';
+        const hr = document.createElement('hr');
+        const p1 = document.createElement('p');
+        p1.innerHTML = "<strong>AI Hypothesis:</strong> The high transaction failure rate was likely caused by a database connection pool exhaustion on the Payment-API service, triggered by a sudden spike in traffic.";
+        const p2 = document.createElement('p');
+        p2.innerHTML = "<strong>Corrective Actions:</strong><br>1. Increase the max connection limit in the database pool configuration.<br>2. Implement a circuit breaker pattern in the API to fail gracefully during database overload.";
+        content.append(h4, incidentStrong, document.createTextNode(msg), document.createElement('br'), sourceStrong, document.createTextNode(src), hr, p1, p2);
+    }, 2000);
+}
+function copyCode(btn) { navigator.clipboard.writeText(btn.nextElementSibling.querySelector('code').innerText).then(() => { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); });}
+
+// --- UTILITIES & CHARTS ---
+function timeAgo(date) { const seconds = Math.floor((new Date() - date) / 1000); if (seconds < 60) return "Just now"; const minutes = Math.floor(seconds / 60); if (minutes < 60) return `${minutes}m ago`; const hours = Math.floor(minutes / 60); return `${hours}h ago`; }
+
+const doughnutOptions = {cutout:'70%',plugins:{legend:{display:false}}};
+const lineOptions = { responsive: true, scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{display:false}} };
+let cpuChart, memChart, cpuReportChart, memReportChart;
+
+function setupCharts() {
+    cpuChart = new Chart(document.getElementById('cpuChart').getContext('2d'),{type:'doughnut',data:{labels:['Used','Free'],datasets:[{data:[60,40],backgroundColor:['#0d6efd','#e9ecef']}]},options:doughnutOptions});
+    memChart = new Chart(document.getElementById('memoryChart').getContext('2d'),{type:'doughnut',data:{labels:['Used','Free'],datasets:[{data:[45,55],backgroundColor:['#198754','#e9ecef']}]},options:doughnutOptions});
+    cpuReportChart = new Chart(document.getElementById('cpuReportChart').getContext('2d'), {type: 'line', data: {labels: ['-6h', '-5h', '-4h', '-3h', '-2h', '-1h', 'Now'], datasets: [{label: 'CPU %', data: [45, 50, 62, 58, 70, 65, 60], borderColor: '#0d6efd', tension: 0.1}]}, options: lineOptions});
+    memReportChart = new Chart(document.getElementById('memReportChart').getContext('2d'), {type: 'line', data: {labels: ['-6h', '-5h', '-4h', '-3h', '-2h', '-1h', 'Now'], datasets: [{label: 'Memory %', data: [30, 35, 40, 42, 55, 50, 45], borderColor: '#198754', tension: 0.1}]}, options: lineOptions});
+    setInterval(()=>{let cpuVal=Math.floor(Math.random()*60)+20, memVal=Math.floor(Math.random()*60)+20; cpuChart.data.datasets[0].data=[cpuVal,100-cpuVal]; cpuChart.update(); memChart.data.datasets[0].data=[memVal,100-memVal]; memChart.update();},3000);
+}
+setupCharts();
+
+function exportReportToPDF(btn) {
+    const { jsPDF } = window.jspdf;
+    const reportSection = document.getElementById('reports');
+    const originalBtnText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Exporting...`;
+
+    html2canvas(reportSection, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+        });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(`IT-Report-${new Date().toISOString().slice(0,10)}.pdf`);
+        
+        btn.disabled = false;
+        btn.innerHTML = originalBtnText;
+    }).catch(err => {
+        console.error("PDF Export failed:", err);
+        alert("Sorry, there was an error exporting the PDF.");
+        btn.disabled = false;
+        btn.innerHTML = originalBtnText;
+    });
+}
+
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+    document.getElementById(sectionId).style.display='block';
+    document.querySelectorAll('#navbar a').forEach(a => a.classList.remove('active'));
+    const activeLink = document.querySelector(`#navbar a[data-section="${sectionId}"]`);
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
+}
+function toggleTheme(){
+    document.body.classList.toggle('dark');
+    const isDarkMode = document.body.classList.contains('dark');
+    document.getElementById('themeToggle').textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
+    document.body.style.background = isDarkMode ? '#121212' : 'var(--background-light)';
+}
+function logoutUser(){
+    if (confirm("Are you sure you want to logout?")) {
+        clearInterval(alertSimulatorInterval);
+        alertSimulatorInterval = null;
+        localStorage.removeItem('loggedInUser');
+        authWrapper.style.display = 'flex';
+        dashboard.style.display = 'none';
+        document.body.style.background = 'linear-gradient(to top right, #fbcfe8, #bfdbfe)';
+        document.getElementById('login-form').reset();
+        document.getElementById('signup-form').reset();
+        displayFeedback('', '', 'login');
+        displayFeedback('', '', 'signup');
+        showLogin();
+    }
+}
+function updateGreeting() {
+    try {
+        const user = JSON.parse(localStorage.getItem('loggedInUser'));
+        document.getElementById('greeting').textContent = `🎉 Welcome, ${user.name} (${user.role})! 🎉`;
+    } catch(e) {
+        // Fallback for corrupted data or old logins
+        document.getElementById('greeting').textContent = `🎉 Welcome, User! 🎉`;
+    }
+}
+</script>
+</body>
+</html>
