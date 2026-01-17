@@ -1,7 +1,7 @@
 # 🚀 Smart IT Ops Dashboard (Superhack 2025)
 
 **Team Name:** THE REBOOTERS  
-**Team Leader:** M.LOKESH
+**Team Leader:** MD.ASLAM
 
 ---
 
